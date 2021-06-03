@@ -1,0 +1,39 @@
+% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h1> {{category.name}}</h1>
+            </div>
+            {% for product in category.products %} <!create for loop ->
+
+                <div class="card col-3" style="width: 18rem;">
+                    <imgsrc="{{ product.image }}" class="card-ing-top" alt="bread">
+                    <div class="card-body">
+                        <h5 class="card-title"> {{ product.desc }}</h5>
+                        <p class="card-text"> {{ product.desc }} </p>
+
+                    <!-- Add a product to the card -->
+
+
+                        <form action="/add-to-cart" method="POST">
+                            <label> QTY: </label>
+                            <input type="number" min="0" max="{{ product.qty }}" step="1" name="qty" value="0">
+                            <br></br>
+                            <input type="hidden" name ="product_id" value="{{ product.id }}" >
+
+                            <button class= "btn btn-primary">Buy</button>
+                        </form>
+                        <a href="/delete_product/{{product.id}}">
+                            <button class="btn btn-danger">Delete</button>
+                        </a>
+
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}
