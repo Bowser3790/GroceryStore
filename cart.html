@@ -45,7 +45,12 @@
 
     .cart_table .price {
         min-width: 150px;
-        text-align: center;
+        text-align: justify;
+    }
+
+    .cart_table .quantity {
+      min-width: 150px;
+      text-align: justify;
     }
 
   </style>
@@ -61,6 +66,7 @@
           <tr>
             <th scope="col">Image</th>
             <th scope="col">Product</th>
+            <th scope="col">Quantity</th>
             <th scope="col">Price</th>
           </tr>
 		
@@ -85,23 +91,23 @@
           </tr>
         {% endfor %}
         
-        </table>
+         </table>
         <div class="sub_total">
           Subtotal:
           <br>
-          {{ subtotal }}
+          {{ "$%.2f"|format(subtotal) }}
         </div>
       </div>
       <div class="col-3 total_section">
         <h3>Order Summary</h3>
         <hr>
-        Subtotal: {{ Subtotal }}
+        Subtotal: {{ "$%.2f"|format(subtotal) }}
         <br>
-        Tax: {{ tax }}
+        Tax: {{ "$%.2f"|format(tax) }}
         <br>
-        Shipping: {{ shipping }}
+        Shipping: {{ "$%.2f"|format(shipping) }}
         <hr>
-        Total: {{ grandtotal }}
+        Total: {{ "$%.2f"|format(grandtotal) }}
         <hr>
         <button class="btn btn-primary btn-large"> Proceed to checkout </button>
       </div>

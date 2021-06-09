@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
+import json 
 
 app = Flask( __name__ )
 app.config['DEBUG'] = True
@@ -56,30 +57,61 @@ class Product( db.Model ):
         self.desc = desc
         self.category = category
 
+def getCart():
+    return json.loads(request.cookies.get("cart", "{}"))
+
 @app.route( "/" )
 def home():
-    return render_template(  "index.html"  )
+    return render_template( "index.html", cart = getCart() )
+
 # Store CONTROLLER
 # Show all products
 
 @app.route( "/cart" )
 def cart():
-    return render_template( "cart.html", cart = mycart )
+    cartArray= []
+
+    for (id, qty) in getCart().items():
+        product = Product.query.get(int(id))
+        cartArray.append( [ product, float(qty) ] )
+
+    subtotal = sum([ item[0].price * item[1] for item in cartArray ])
+    tax = subtotal * 0.07
+    shipping = 30.00
+    grandtotal = tax + shipping + subtotal
+
+    # totalsArray = []
+    # for item in cartArray:
+    #     totalsArray.append( item[0].price * item[1] )
+    # subtotal = sum(totalsArray)
+
+    return render_template( "cart.html", cart = getCart(), myCart = cartArray, subtotal = subtotal, tax = tax, shipping = shipping, grandtotal = grandtotal )
 
 # T: Index ( Read All )
 @app.route( "/store" )
 def store():
-    return render_template( "shop.html", inventory = Product.query.all() )
+    return render_template( "shop.html", inventory = Product.query.all(), cart = getCart() )
 
 @app.route( "/add-to-cart", methods= ["POST"] )
 def add_to_cart():
     product_id = request.form.get('product_id', None)
     qty = request.form.get('qty', 0)
+    myCart = GetCart()
 
     if product_id != None:
         product = products[ int(product_id) ]
         mycart.append( [product, float(qty)] )
         return redirect("/cart")
+
+     if myCart.get(str(product.id), None) == None:
+            # or you can say
+            # if str(product.id) not in myCart:
+            myCart[str(product.id)] = qty
+        else:
+            myCart[str(product.id)] = int(myCart[str(product.id)]) + int(qty)
+
+        resp.set_cookie( "cart", json.dumps( myCart ) )
+        return resp
 
     return redirect("/store")
 
@@ -101,7 +133,7 @@ def add_product():
         return redirect(f"/product/{newProduct.id}")
     else:
         categories = Category.query.all()
-        return render_template("add_product.html", categories = categories)
+        return render_template("add_product.html", categories = categories, cart = getCart())
 
 
 # R : Read
@@ -111,7 +143,7 @@ def product( product_id ):
     if product != None:
         return render_template("product.html", product = product)
     else:
-        return render_template("notfound.html")
+        return render_template("notfound.html", cart = getCart())
 
 # U : Update
 @app.route( "/update_product/<product_id>", methods = ["GET","POST"] )
@@ -130,10 +162,10 @@ def update_product(product_id):
 
             return redirect(f"/product/{product.id}")
         else:
-            return render_template("notfound.html")
+            return render_template("notfound.html", cart = getCart())
     else:
         categories = Category.query.all()
-        return render_template("update_product.html", product = product, categories = categories)
+        return render_template("update_product.html", product = product, categories = categories, cart = getCart())
 
 # D : Destroy/Delete
 @app.route( "/delete_product/<product_id>" )
@@ -144,7 +176,7 @@ def delete_product( product_id ):
         db.session.commit()
         return redirect("/store")
     else:
-        return render_template("notfound.html")
+        return render_template("notfound.html", cart = getCart())
 
 # CATEGORY
 
@@ -152,7 +184,7 @@ def delete_product( product_id ):
 @app.route( "/all_categories/" )
 def all_categories():
     categories = Category.query.all()
-    return render_template( "/category/categories.html", categories = categories )
+    return render_template( "/category/categories.html", categories = categories, cart = myCart() )
 
 # C
 @app.route( "/add_category/", methods = ["GET","POST"])
@@ -166,16 +198,16 @@ def add_category():
         db.session.commit()
         return redirect("/store")
     else:
-        return render_template("/category/add_category.html")
+        return render_template("/category/add_category.html", cart = myCart() )
 
 # R
 @app.route( "/category/<category_id>" )
 def category( category_id ):
     category = Category.query.get( int(category_id) )
     if category != None:
-        return render_template("/category/category.html", category = category)
+        return render_template("/category/category.html", category = category, cart = myCart())
     else:
-        return render_template("notfound.html")
+        return render_template("notfound.html", cart = myCart())
 
 # U
 @app.route( "/update_category/<category_id>", methods = ["GET","POST"] )
@@ -191,9 +223,9 @@ def update_category(category_id):
 
             return redirect(f"/category/{category.id}")
         else:
-            return render_template("notfound.html")
+            return render_template("notfound.html", cart = myCart())
     else:
-        return render_template("/category/update_category.html", category = category)
+        return render_template("/category/update_category.html", category = category, cart = myCart())
 
 # D: Delete categories.
 @app.route( "/delete_category/<category_id>" )
@@ -204,7 +236,7 @@ def delete_category( category_id ):
         db.session.commit()
         return redirect("/store")
     else:
-        return render_template("notfound.html")
+        return render_template("notfound.html", cart = myCart())
 
 
 if __name__ == "__main__":
